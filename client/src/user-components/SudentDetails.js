@@ -15,6 +15,11 @@ import {
   TableBody,
   Paper,
 } from "@mui/material";
+import dayjs from "dayjs";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import "../style.css";
 
@@ -24,26 +29,35 @@ export default function StudentDetails({ filename }) {
   const [sscType, setSSCType] = useState("");
   const [sscPassYear, setSSCPassYear] = useState("");
   const [sscHallTicket, setSSCHallTicket] = useState("");
+  const [hallTicketValid, setHallTicketValid] = useState(true);
   const [dob, setDOB] = useState("");
 
   //Student Details
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [fatherName, setFatherName] = useState("");
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
+  const [ageValid, setAgeValid] = useState(true);
   const [mobileNo, setMobileNo] = useState(0);
+  const [mobileValid, setMobileValid] = useState(true);
   const [email, setEmail] = useState("");
+  const [validMail, setValidEmail] = useState(true);
   const [aadhar, setAadhar] = useState("");
-  const [file, setFile] = useState();
-  const [imageUrl, setImageUrl] = useState();
+  const [aadharValid, setAadharValid] = useState(true);
+  const [file, setFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   localStorage.setItem("applcationMail", email);
 
   //Residential Adress Details
   const [district, setDistrict] = useState("");
   const [mandal, setMandal] = useState("");
+  const [mandalValid, setMandalValid] = useState(true);
   const [village, setVillage] = useState("");
+  const [villageValid, setVillageValid] = useState(true);
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [pinValid, setPinValid] = useState(true);
 
   //Institutional Details
   const [districtInstitution, setDistrictInstitution] = useState("");
@@ -58,25 +72,84 @@ export default function StudentDetails({ filename }) {
 
   //Review Part
 
-  const [formData, setFormData] = useState({
-    sscBoardType: "",
-    sscType: "",
-    sscPassYear: "",
-    sscHallTicket: "",
-    dob: "",
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleEmail = (e) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailValue = e.target.value;
+    setEmail(emailValue);
+    setValidEmail(emailPattern.test(emailValue));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setReview(true);
+  const handleSSCPassYear = (e) => {
+    setSSCPassYear(e.target.value);
+  };
+
+  const handleSSCHallTicket = (e) => {
+    const hallTicketPattern = /^[0-9]{10}$/; // Regular expression for 10-digit hall ticket number
+    const hallTicketValue = e.target.value;
+    setSSCHallTicket(hallTicketValue);
+    setHallTicketValid(hallTicketPattern.test(hallTicketValue));
+  };
+  const validateName = () => {
+    const namePattern = /^[a-zA-Z\s-]+$/; // Regular expression for name (letters, spaces, and hyphens)
+
+    if (namePattern.test(name.trim())) {
+      setNameError(""); // Clear error message if name is valid
+      return true; // Return true if validation passes
+    } else {
+      setNameError("Invalid name");
+      return false; // Return false if validation fails
+    }
+  };
+
+  const handleDOB = (e) => {
+    const { $D, $M, $y } = e;
+    const day = $D < 10 ? `0${$D}` : $D; // Add leading zero if day is less than 10
+    const month = $M + 1 < 10 ? `0${$M + 1}` : $M + 1; // Increment month by 1 and add leading zero if less than 10
+    const year = $y;
+    const combinedDate = `${day}${month}${year}`; // Combine day, month, and year
+    setDOB(combinedDate);
+  };
+
+  const handleAge = (e) => {
+    const agePattern = /^[0-9]{2}$/; // Regular expression for 10-digit hall ticket number
+    const ageValue = e.target.value;
+    setAge(ageValue);
+    setAgeValid(agePattern.test(ageValue));
+  };
+
+  const handleMobile = (e) => {
+    const mobilePattern = /^[0-9]{10}$/;
+    const mobileNoValue = e.target.value;
+    setMobileNo(mobileNoValue);
+    setMobileValid(mobilePattern.test(mobileNoValue));
+  };
+
+  const handleAadhar = (e) => {
+    const aadharPattern = /^[0-9]{12}$/; // Regular expression for 10-digit hall ticket number
+    const aadharValue = e.target.value;
+    setAadhar(aadharValue);
+    setAadharValid(aadharPattern.test(aadharValue));
+  };
+
+  const handleResidentialMandal = (e) => {
+    const mandalPattern = /^[a-zA-Z\s-]+$/;
+    const mandalValue = e.target.value;
+    setMandal(mandalValue);
+    setMandalValid(mandalPattern.test(mandalValue));
+  };
+
+  const handleVillage = (e) => {
+    const villagePattern = /^[a-zA-Z()\s-]+$/;
+    const villageValue = e.target.value;
+    setVillage(villageValue);
+    setVillageValid(villagePattern.test(villageValue));
+  };
+
+  const handlePinCode = (e) => {
+    const pinPattern = /^[0-9]{6}$/;
+    const pinValue = e.target.value;
+    setPostalCode(pinValue);
+    setPinValid(pinPattern.test(pinValue));
   };
 
   const handleStudentDetailsNext = () => {
@@ -158,28 +231,32 @@ export default function StudentDetails({ filename }) {
       alert("SSC Type is required");
     } else if (sscPassYear.length <= 0) {
       alert("SSC Pass Year is required");
-    } else if (sscHallTicket.length <= 0) {
-      alert("SSC Hall Ticket is required");
     } else if (dob.length <= 0) {
       alert("Date of Birth is required");
-    } else if (name.length <= 0) {
-      alert("Name is required");
+    } else if (!hallTicketValid || sscHallTicket.length <= 0) {
+      alert("Not a valid hall ticket OR Hall Ticket Required");
+    } else if (!validateName()) {
+      alert("Not a valid name");
     } else if (fatherName.length <= 0) {
       alert("Father name is required");
     } else if (gender.length <= 0) {
       alert("Gender is required");
-    } else if (mobileNo.length <= 0) {
-      alert("Mobile number is required");
-    } else if (districtInstitution.length <= 0) {
-      alert("Institution District is required");
-    } else if (mandalInstitution.length <= 0) {
-      alert("Institution Mandal is required");
-    } else if (institutionname.length <= 0) {
-      alert("Institution Name is required");
-    } else if (coursename.length <= 0) {
-      alert("Course name is required");
-    } else if (admissionnumber.length <= 0) {
-      alert("Admission Number is required");
+    } else if (!ageValid || age.length <= 0) {
+      alert("Not a valid age OR age required");
+    } else if (!validMail || email.length <= 0) {
+      alert("Not an valid Email");
+    } else if (!mobileValid || mobileNo.length <= 0) {
+      alert("Not a valid mobile number OR mobile number Required");
+    } else if (!aadharValid || aadhar.length <= 0) {
+      alert("Not a valid aadhar  OR aadhar Required");
+    } else if (district.length <= 0) {
+      alert("District is required");
+    } else if (!mandalValid || mandal.length <= 0) {
+      alert("Not a valid mandal OR Mandal is required");
+    } else if (!villageValid || village.length <= 0) {
+      alert("Not a valid village OR village is required");
+    } else if (!pinValid || postalCode.length <= 0) {
+      alert("Not a valid postalCode OR postalCode is required");
     } else {
       setReview(true);
     }
@@ -198,7 +275,7 @@ export default function StudentDetails({ filename }) {
             gutterBottom
             style={{ margin: "20px 0", fontSize: "20px" }}
           >
-            <spam>Student Education Details</spam>
+            <strong>Student Education Details</strong>
           </Typography>
           <div className="sub-divs">
             <Grid container spacing={3}>
@@ -212,6 +289,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={sscBoard}
                   onChange={(e) => setSSCBoard(e.target.value)}
                 >
                   <MenuItem value="SSC">SSC</MenuItem>
@@ -232,6 +310,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
+                  value={sscType}
                   onChange={(e) => setSSCType(e.target.value)}
                 >
                   <MenuItem value="Regular">Regular</MenuItem>
@@ -239,16 +318,29 @@ export default function StudentDetails({ filename }) {
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
+                <select
                   required
                   id="passYear"
                   name="passYear"
-                  label="Pass Year"
-                  fullWidth
-                  autoComplete="shipping address-line1"
-                  variant="outlined"
-                  onChange={(e) => setSSCPassYear(e.target.value)}
-                />
+                  value={sscPassYear}
+                  onChange={handleSSCPassYear}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    fontSize: "16px",
+                    border: "1px solid #ccc",
+                  }}
+                >
+                  <option value="">-- Select a year --</option>
+                  {Array.from(
+                    { length: 30 },
+                    (_, i) => new Date().getFullYear() - i
+                  ).map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -259,24 +351,14 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="shipping address-line2"
                   variant="outlined"
-                  onChange={(e) => setSSCHallTicket(e.target.value)}
+                  onChange={handleSSCHallTicket}
+                  value={sscHallTicket}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  id="dob"
-                  name="dob"
-                  label="Date of Birth"
-                  type="Date"
-                  fullWidth
-                  autoComplete="shipping address-level2"
-                  variant="outlined"
-                  onChange={(e) => setDOB(e.target.value)}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker fullWidth onChange={handleDOB} />
+                </LocalizationProvider>
               </Grid>
             </Grid>
           </div>
@@ -290,7 +372,7 @@ export default function StudentDetails({ filename }) {
               fontSize: "20px",
             }}
           >
-            <spam>Student Details</spam>
+            <strong>Student Details</strong>
           </Typography>
           <div className="sub-divs">
             <Grid container spacing={3}>
@@ -324,7 +406,7 @@ export default function StudentDetails({ filename }) {
                   id="dob"
                   name="dob"
                   label="Date of Birth"
-                  type="date"
+                  value={dob}
                   fullWidth
                   autoComplete="shipping address-level2"
                   variant="outlined"
@@ -343,6 +425,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={gender}
                   onChange={(e) => setGender(e.target.value)}
                 >
                   <MenuItem value="Male">Male</MenuItem>
@@ -358,7 +441,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setAge(e.target.value)}
+                  onChange={handleAge}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -369,31 +452,32 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setAadhar(e.target.value)}
+                  onChange={handleAadhar}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
-                  type="number"
+                  type="text"
                   id="mobileNo"
                   name="mobileNo"
                   label="Mobile No"
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setMobileNo(e.target.value)}
+                  onChange={handleMobile}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  required
                   id="email"
                   name="email"
                   label="Email"
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmail}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -424,7 +508,7 @@ export default function StudentDetails({ filename }) {
               fontSize: "20px",
             }}
           >
-            <spam>Residential Address Details</spam>
+            <strong>Residential Address Details</strong>
           </Typography>
           <div className="sub-divs">
             <Grid container spacing={3}>
@@ -438,6 +522,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                 >
                   <MenuItem value="Adilabad">Adilabad</MenuItem>
@@ -486,23 +571,14 @@ export default function StudentDetails({ filename }) {
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
-                  select
                   id="mandal"
                   name="mandal"
                   label="Mandal"
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
-                  onChange={(e) => setMandal(e.target.value)}
-                >
-                  <MenuItem value="Kalher">Kalher</MenuItem>
-                  <MenuItem value="Kangti">Kangti</MenuItem>
-                  <MenuItem value="Manoor">Manoor</MenuItem>
-                  <MenuItem value="Nagilgidda">Nagilgidda</MenuItem>
-                  <MenuItem value="Narayankhed">Narayankhed</MenuItem>
-                  <MenuItem value="Sirgapoor">Sirgapoor</MenuItem>
-                  <MenuItem value="Tadkal">Tadkal</MenuItem>
-                </TextField>
+                  onChange={handleResidentialMandal}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -513,7 +589,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setVillage(e.target.value)}
+                  onChange={handleVillage}
                 />
               </Grid>
 
@@ -537,7 +613,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setPostalCode(e.target.value)}
+                  onChange={handlePinCode}
                 />
               </Grid>
             </Grid>
@@ -566,6 +642,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={districtInstitution}
                   onChange={(e) => setDistrictInstitution(e.target.value)}
                 >
                   <MenuItem value="Adilabad">Adilabad</MenuItem>
@@ -613,23 +690,15 @@ export default function StudentDetails({ filename }) {
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
-                  select
                   id="mandalInstitution"
                   name="mandalInstitution"
                   label="Mandal"
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={mandalInstitution}
                   onChange={(e) => setMandalInstitution(e.target.value)}
-                >
-                  <MenuItem value="Kalher">Kalher</MenuItem>
-                  <MenuItem value="Kangti">Kangti</MenuItem>
-                  <MenuItem value="Manoor">Manoor</MenuItem>
-                  <MenuItem value="Nagilgidda">Nagilgidda</MenuItem>
-                  <MenuItem value="Narayankhed">Narayankhed</MenuItem>
-                  <MenuItem value="Sirgapoor">Sirgapoor</MenuItem>
-                  <MenuItem value="Tadkal">Tadkal</MenuItem>
-                </TextField>
+                ></TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -653,6 +722,7 @@ export default function StudentDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={coursename}
                   onChange={(e) => setCourseName(e.target.value)}
                 >
                   <MenuItem value="Primary">Primary</MenuItem>
@@ -716,7 +786,7 @@ export default function StudentDetails({ filename }) {
               fontSize: "2rem",
             }}
           >
-            <spam>APPLICATION</spam>
+            <strong>APPLICATION</strong>
           </Typography>
           <img src={file} alt="" />
           <div style={{ display: "flex", flex: 1 }}>

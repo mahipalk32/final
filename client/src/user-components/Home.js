@@ -28,7 +28,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import PageviewIcon from "@mui/icons-material/Pageview";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import SignInPage from "./SignInPage";
-import UserSignIn from "./UserSignIn";
 import AdminSignIn from "./AdminSignIn";
 import UserRegistration from "./UserRegistration";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -43,6 +42,10 @@ import EmailSend from "./EmailSend";
 import OtherUserDetails from "./OtherUserDetails";
 import AdminHome from "../admin-components/AdminHome";
 import QrGenerationPage from "../admin-components/QrGenerationPage";
+import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
+import OtherPayment from "./OtherPayment";
+import VerifyPass from "./VerifyPass";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -109,23 +112,47 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-function stringAvatar(name) {
-  return {
-    children: name
-      .split(" ")
-      .map((word) => word[0])
-      .join(""),
-  };
-}
-
 export default function Home() {
   const childRef = useRef(null);
+  const { isAuthenticated, logout, user } = useAuth0();
+  const [wallet, setWallet] = useState(0);
 
-  const callChildFunction = () => {
-    if (childRef.current) {
-      childRef.current.guideFunction();
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      let email = user.email;
+      let name = user.name;
+      localStorage.setItem("email", email);
+      axios
+        .post("http://localhost:8080/user-signin", { email })
+        .then((result) => {
+          if (result.data.status === "fail") {
+            axios
+              .post("http://localhost:8080/register", {
+                name,
+                email,
+                wallet,
+              })
+              .then((result) => {})
+              .catch((err) => {});
+          }
+        })
+        .catch((err) => {});
     }
-  };
+  }, [isAuthenticated, user]);
+
+  React.useEffect(() => {
+    // if (isAuthenticated && user) {
+    axios
+      .get(
+        `http://localhost:8080/getUserWallet/${localStorage.getItem("email")}`
+      )
+      .then((result) => {
+        setWallet(result.data.wallet);
+        localStorage.setItem("wallet", result.data.wallet);
+      })
+      .catch((err) => console.log(err));
+    // }
+  }, [isAuthenticated]);
 
   const theme = useTheme();
   const navigate = useNavigate();
@@ -134,13 +161,8 @@ export default function Home() {
   const [openSubsection1, setOpenSubsection1] = useState(false);
   const [openSubsection2, setOpenSubsection2] = useState(false);
   const [titleHandle, setTitleHandle] = useState(false); //title Handle is bcz when we click on menu the title shoud appear in Drawer header not in App bar
-  const [profileOpen, setProfileOpen] = useState(false);
 
-  const isUserLoggedin = localStorage.getItem("userSignIn");
   const isAdminLoggedin = localStorage.getItem("admin");
-  const firstname = localStorage.getItem("firstname");
-  const lastname = localStorage.getItem("lastname");
-  const wallet = localStorage.getItem("wallet");
   const passRoute = `pass${wallet}`;
 
   const handleDrawerOpen = () => {
@@ -177,9 +199,9 @@ export default function Home() {
     navigate("/other/apply");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     localStorage.clear();
-    navigate("/");
   };
 
   const handleAddWallet = () => {
@@ -192,10 +214,6 @@ export default function Home() {
 
   const handleViewPass = () => {
     navigate("/view-pass");
-  };
-
-  const handleRenewalPass = () => {
-    navigate("/renewal");
   };
 
   const divStyleAvatar = {
@@ -222,7 +240,7 @@ export default function Home() {
         style={{ backgroundColor: "#231F20" }}
       >
         <Toolbar>
-          {isUserLoggedin && !isAdminLoggedin && (
+          {isAuthenticated && !isAdminLoggedin && (
             <IconButton
               color="inherit"
               aria-label="open drawer"
@@ -241,7 +259,7 @@ export default function Home() {
               busPass
             </Typography>
           )}
-          {!isUserLoggedin && !isAdminLoggedin && (
+          {!isAuthenticated && !isAdminLoggedin && (
             <div style={divStyleAvatar}>
               <Button
                 variant="text"
@@ -252,7 +270,7 @@ export default function Home() {
               </Button>
             </div>
           )}
-          {!isUserLoggedin && isAdminLoggedin && (
+          {!isAuthenticated && isAdminLoggedin && (
             <div style={divStyleAvatar}>
               <Button
                 variant="outlined"
@@ -263,24 +281,20 @@ export default function Home() {
               </Button>
             </div>
           )}
-          {!isUserLoggedin && isAdminLoggedin && (
+          {!isAuthenticated && isAdminLoggedin && (
             <div style={divStyleAdminAvatar}>
               <Avatar src="/broken-image.jpg" />
             </div>
           )}
-          {isUserLoggedin && !isAdminLoggedin && (
+          {isAuthenticated && !isAdminLoggedin && (
             <div style={divStyleAvatar}>
-              <Avatar
-                {...stringAvatar(`${firstname} ${lastname}`)}
-                style={{ color: "black" }}
-                onClick={() => setProfileOpen((prev) => !prev)}
-              ></Avatar>
+              <Avatar src={`${user.picture}`} alt="Profile Picture" />
             </div>
           )}
         </Toolbar>
       </AppBar>
 
-      {isUserLoggedin && !isAdminLoggedin && (
+      {isAuthenticated && !isAdminLoggedin && (
         <Drawer variant="permanent" open={open}>
           <DrawerHeader
             style={{ backgroundColor: "#231F20", color: "#F2F2F2" }}
@@ -395,7 +409,6 @@ export default function Home() {
           <Route path="/send-mail" element={<EmailSend />}></Route>
           <Route path="/renewal" element={<ViewPass />}></Route>
           <Route path="/login" element={<SignInPage />}></Route>
-          <Route path="/user-signin" element={<UserSignIn />}></Route>
           <Route path="/admin-signin" element={<AdminSignIn />}></Route>
           <Route
             path="/user-registration"
@@ -411,14 +424,22 @@ export default function Home() {
             element={<StudentPayment />}
           ></Route>
           <Route
+            path="/other/payment"
+            element={<OtherPayment />}
+          ></Route>
+          <Route
             path="/student/high-school/payment/status"
+            element={<PaymentSuccessPage />}
+          ></Route>
+          <Route
+            path="/other/payment/status"
             element={<PaymentSuccessPage />}
           ></Route>
           <Route path="/other/apply" element={<OtherUserDetails />}></Route>
           admin-portal
           <Route path="/admin-portal" element={<AdminHome />}></Route>
           <Route path="/qrgeneration" element={<QrGenerationPage />}></Route>
-          <Route path={passRoute} element={<QrGenerationPage />}></Route>
+          <Route path="/verify-pass/*" element={<VerifyPass />} />
         </Routes>
       </Box>
     </Box>

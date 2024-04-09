@@ -2,23 +2,23 @@ import * as React from "react";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import { Button, Card, CardContent, MenuItem } from "@mui/material";
+import { Button,  MenuItem } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../style.css";
 import { useAuth0 } from "@auth0/auth0-react";
 
-export default function StudentPayment() {
+export default function OtherPayment() {
   const [showAmount, setShowAmount] = useState(false);
   const [routeDetails, setRouteDetails] = useState([]);
   const [cost, setCost] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState(false);
   const [status, setStatus] = useState("pending");
-  const [applicationType, setApplicationType] = useState("student");
+  const [applicationType, setApplicationType] = useState("other");
 
   const navigate = useNavigate();
-  const { user } = useAuth0();
+//   const { user } = useAuth0();
   const appEmail = localStorage.getItem("email");
 
   //Payment and Route State variables
@@ -34,9 +34,6 @@ export default function StudentPayment() {
   const [imgUrl, setImgUrl] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
-  const [isSufficientWallet, setIsSufficientWallet] = useState(false);
-  const [updateWallet, setUpdateWallet] = useState(0);
 
   React.useEffect(() => {
     if (passType === "custom") {
@@ -97,7 +94,6 @@ export default function StudentPayment() {
 
     if (totalAmount > wallent) {
       alert("Insufficient Balnce - UPDATE WALLET");
-      setIsSufficientWallet(true);
       return;
     }
 
@@ -106,7 +102,7 @@ export default function StudentPayment() {
         .put(`http://localhost:8080/payment/${appEmail}`, { cost })
         .then((result) => {
           setPaymentStatus(true);
-          navigate("/student/high-school/payment/status");
+          navigate("/other/payment/status");
         })
         .catch((err) => {});
       axios

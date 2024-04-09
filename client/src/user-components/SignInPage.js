@@ -1,12 +1,15 @@
 import React from "react";
 import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function SignInPage() {
   const navigate = useNavigate();
 
-  const handleUserSignIn = () => {
-    navigate("/user-signin");
+  const { loginWithRedirect } = useAuth0();
+
+  const handleUserSignIn = async () => {
+    await loginWithRedirect();
   };
 
   const handleAdminSignIn = () => {

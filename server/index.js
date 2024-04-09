@@ -22,8 +22,10 @@ app.use(express.static(staticPath));
 app.use(cors());
 const PORT = 8080;
 
-const DB =
-  "mongodb+srv://mahipalkeluth143:uK0niUwwZG9FOCHp@majordb.cb49png.mongodb.net/major_project_db?retryWrites=true&w=majority";
+// const DB =
+//   "mongodb+srv://mahipalkeluth143:uK0niUwwZG9FOCHp@majordb.cb49png.mongodb.net/bussPass?retryWrites=true&w=majority";
+
+const DB = "mongodb://0.0.0.0:27017";
 
 mongoose.connect(DB, {
   useNewUrlParser: true,
@@ -39,21 +41,13 @@ mongoose.connection.on("error", (err) => {
 });
 
 app.post("/user-signin", (req, res) => {
-  const { email, password } = req.body;
+  const { email } = req.body;
   UserRegistrationModel.findOne({ email: email }).then((user) => {
     if (user) {
-      if (user.password === password) {
-        res.json({
-          status: "Success",
-          firstname: user.firstname,
-          lastname: user.lastname,
-          wallet: user.wallet,
-        });
-      } else {
-        res.json("password incorrect");
-      }
+      // console.log(user);
+      res.json({ status: "success" });
     } else {
-      res.json("user does not exist");
+      res.json({ status: "fail" });
     }
   });
 });
@@ -64,9 +58,12 @@ app.get("/routeCost", (req, res) => {
     .catch((err) => res.json(err));
 });
 
-app.get("/getUserWallet", (req, res) => {
-  UserRegistrationModel.find()
-    .then((result) => res.json(result))
+app.get("/getUserWallet/:email", (req, res) => {
+  const { email } = req.params;
+  UserRegistrationModel.findOne({ email: email })
+    .then((result) => {
+      res.json(result);
+    })
     .catch((err) => res.json(err));
 });
 
@@ -169,7 +166,24 @@ app.post("/student_study_details", (req, res) => {
 });
 
 app.post("/institution_detail", (req, res) => {
-  InstitutionDetailsModel.create(req.body)
+  const {
+    email,
+    districtInstitution,
+    mandalInstitution,
+    institutionname,
+    coursename,
+    admissionnumber,
+    addressInstitution,
+  } = req.body;
+  InstitutionDetailsModel.create({
+    email: email,
+    districtInstitution: districtInstitution,
+    mandalInstitution: mandalInstitution,
+    institutionname: institutionname,
+    coursename: coursename,
+    admissionnumber: admissionnumber,
+    addressInstitution: addressInstitution,
+  })
     .then((result) => res.json(result))
     .catch((err) => res.json(err));
 });
@@ -232,6 +246,20 @@ app.get("/student-apply-insitution-details/:applicationMail", (req, res) => {
 app.get("/student-apply-residential-details/:applicationMail", (req, res) => {
   const applicationMail = req.params.applicationMail;
   ResidentialAddressDetailsModel.findOne({ email: applicationMail })
+    .then((result) => res.json(result))
+    .catch((err) => res.json(err));
+});
+
+app.get("/other-personal-details/:applicationMail", (req, res) => {
+  const applicationMail = req.params.applicationMail;
+  UserPersonalDetailsModel.findOne({ email: applicationMail })
+    .then((result) => res.json(result))
+    .catch((err) => res.json(err));
+});
+
+app.get("/other-residential-details/:applicationMail", (req, res) => {
+  const applicationMail = req.params.applicationMail;
+  UserResidentialDetailsModel.findOne({ email: applicationMail })
     .then((result) => res.json(result))
     .catch((err) => res.json(err));
 });
@@ -303,6 +331,21 @@ app.get("/getName/:viewMail", (req, res) => {
     .then((result) => res.json(result))
     .catch((err) => res.json(err));
 });
+
+app.get("/getNameOther/:viewMail", (req, res) => {
+  const viewMail = req.params.viewMail;
+  UserPersonalDetailsModel.findOne({ email: viewMail })
+    .then((result) => res.json(result))
+    .catch((err) => res.json(err));
+});
+
+app.get("/appDetails/:appMail", (req, res) => {
+  const appEmail = req.params.appMail;
+  ApplicationMailsModel.findOne({ email: appEmail })
+    .then((result) => res.json(result))
+    .catch((err) => res.json(err));
+});
+
 
 /* ************ VIEW PASS API *********** */
 app.get("/getStatus/:viewMail", (req, res) => {

@@ -16,28 +16,111 @@ import {
   Paper,
 } from "@mui/material";
 import "../style.css";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 export default function OtherUserDetails({ filename }) {
   //Other User Details
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [fatherName, setFatherName] = useState("");
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
+  const [ageValid, setAgeValid] = useState(true);
+
   const [mobileNo, setMobileNo] = useState(0);
+  const [mobileValid, setMobileValid] = useState(true);
   const [email, setEmail] = useState("");
+  const [validMail, setValidEmail] = useState(true);
   const [aadhar, setAadhar] = useState("");
-  const [file, setFile] = useState();
+  const [aadharValid, setAadharValid] = useState(true);
+  const [file, setFile] = useState(null);
   const [dob, setDOB] = useState("");
+  localStorage.setItem("applcationMail", email);
 
   //Residential Adress Details
   const [district, setDistrict] = useState("");
   const [mandal, setMandal] = useState("");
+  const [mandalValid, setMandalValid] = useState(true);
   const [village, setVillage] = useState("");
+  const [villageValid, setVillageValid] = useState(true);
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [pinValid, setPinValid] = useState(true);
 
   const navigate = useNavigate();
   const [review, setReview] = useState(false);
+
+  const validateName = () => {
+    const namePattern = /^[a-zA-Z\s-]+$/; // Regular expression for name (letters, spaces, and hyphens)
+
+    if (namePattern.test(name.trim())) {
+      setNameError(""); // Clear error message if name is valid
+      return true; // Return true if validation passes
+    } else {
+      setNameError("Invalid name");
+      return false; // Return false if validation fails
+    }
+  };
+
+  const handleDOB = (e) => {
+    const { $D, $M, $y } = e;
+    const day = $D < 10 ? `0${$D}` : $D; // Add leading zero if day is less than 10
+    const month = $M + 1 < 10 ? `0${$M + 1}` : $M + 1; // Increment month by 1 and add leading zero if less than 10
+    const year = $y;
+    const combinedDate = `${day}${month}${year}`; // Combine day, month, and year
+    setDOB(combinedDate);
+  };
+
+  console.log(dob);
+  const handleAge = (e) => {
+    const agePattern = /^[0-9]{2}$/; // Regular expression for 10-digit hall ticket number
+    const ageValue = e.target.value;
+    setAge(ageValue);
+    setAgeValid(agePattern.test(ageValue));
+  };
+
+  const handleAadhar = (e) => {
+    const aadharPattern = /^[0-9]{12}$/; // Regular expression for 10-digit hall ticket number
+    const aadharValue = e.target.value;
+    setAadhar(aadharValue);
+    setAadharValid(aadharPattern.test(aadharValue));
+  };
+
+  const handleMobile = (e) => {
+    const mobilePattern = /^[0-9]{10}$/;
+    const mobileNoValue = e.target.value;
+    setMobileNo(mobileNoValue);
+    setMobileValid(mobilePattern.test(mobileNoValue));
+  };
+
+  const handleEmail = (e) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailValue = e.target.value;
+    setEmail(emailValue);
+    setValidEmail(emailPattern.test(emailValue));
+  };
+  const handleResidentialMandal = (e) => {
+    const mandalPattern = /^[a-zA-Z\s-]+$/;
+    const mandalValue = e.target.value;
+    setMandal(mandalValue);
+    setMandalValid(mandalPattern.test(mandalValue));
+  };
+
+  const handleVillage = (e) => {
+    const villagePattern = /^[a-zA-Z()\s-]+$/;
+    const villageValue = e.target.value;
+    setVillage(villageValue);
+    setVillageValid(villagePattern.test(villageValue));
+  };
+
+  const handlePinCode = (e) => {
+    const pinPattern = /^[0-9]{6}$/;
+    const pinValue = e.target.value;
+    setPostalCode(pinValue);
+    setPinValid(pinPattern.test(pinValue));
+  };
 
   //Review Part
   const handleSubmit = (e) => {
@@ -46,13 +129,17 @@ export default function OtherUserDetails({ filename }) {
   };
 
   const handleStudentDetailsNext = () => {
-    navigate("/student/high-school/payment");
+    navigate("/other/payment");
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("email", email);
+    formData.append("iam", name);
 
     axios
       .post("http://localhost:8080/uploadPhoto", formData, {
-        email,
+        body: {
+          email: email,
+        },
       })
       .then((res) => {})
       .catch((err) => {});
@@ -72,23 +159,13 @@ export default function OtherUserDetails({ filename }) {
       .catch((err) => {});
 
     axios
-      .post(
-        "http://localhost:8080/user_apply_residential_details",
-        {
-          email,
-          district,
-          mandal,
-          village,
-          address,
-          postalCode,
-        }
-      )
-      .then((res) => {})
-      .catch((err) => {});
-
-    axios
-      .post("http://localhost:8080/applicaiton_emails", {
+      .post("http://localhost:8080/user_apply_residential_details", {
         email,
+        district,
+        mandal,
+        village,
+        address,
+        postalCode,
       })
       .then((res) => {})
       .catch((err) => {});
@@ -99,16 +176,30 @@ export default function OtherUserDetails({ filename }) {
   };
 
   const handleNextPreview = () => {
-    if (dob.length <= 0) {
-      alert("Date of Birth is required");
-    } else if (name.length <= 0) {
-      alert("Name is required");
+    if (!validateName()) {
+      alert("Not a valid name");
     } else if (fatherName.length <= 0) {
       alert("Father name is required");
+    } else if (dob.length <= 0) {
+      alert("Date of Birth is required");
     } else if (gender.length <= 0) {
       alert("Gender is required");
-    } else if (mobileNo.length <= 0) {
-      alert("Mobile number is required");
+    } else if (!ageValid || age.length <= 0) {
+      alert("Not a valid age OR age required");
+    } else if (!validMail || email.length <= 0) {
+      alert("Not an valid Email");
+    } else if (!mobileValid || mobileNo.length <= 0) {
+      alert("Not a valid mobile number OR mobile number Required");
+    } else if (!aadharValid || aadhar.length <= 0) {
+      alert("Not a valid aadhar  OR aadhar Required");
+    } else if (district.length <= 0) {
+      alert("District is required");
+    } else if (!mandalValid || mandal.length <= 0) {
+      alert("Not a valid mandal OR Mandal is required");
+    } else if (!villageValid || village.length <= 0) {
+      alert("Not a valid village OR village is required");
+    } else if (!pinValid || postalCode.length <= 0) {
+      alert("Not a valid postalCode OR postalCode is required");
     } else {
       setReview(true);
     }
@@ -127,7 +218,7 @@ export default function OtherUserDetails({ filename }) {
             gutterBottom
             style={{ margin: "20px 0", fontSize: "20px" }}
           >
-            <spam>User Details</spam>
+            <strong>User Details</strong>
           </Typography>
           <div className="sub-divs">
             <Grid container spacing={3}>
@@ -156,20 +247,9 @@ export default function OtherUserDetails({ filename }) {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  id="dob"
-                  name="dob"
-                  label="Date of Birth"
-                  type="date"
-                  fullWidth
-                  autoComplete="shipping address-level2"
-                  variant="outlined"
-                  onChange={(e) => setDOB(e.target.value)}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker fullWidth onChange={handleDOB} />
+                </LocalizationProvider>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -181,6 +261,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={gender}
                   onChange={(e) => setGender(e.target.value)}
                 >
                   <MenuItem value="Male">Male</MenuItem>
@@ -196,7 +277,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setAge(e.target.value)}
+                  onChange={handleAge}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -207,20 +288,19 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setAadhar(e.target.value)}
+                  onChange={handleAadhar}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
-                  type="number"
                   id="mobileNo"
                   name="mobileNo"
                   label="Mobile No"
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setMobileNo(e.target.value)}
+                  onChange={handleMobile}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -231,7 +311,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmail}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -262,7 +342,7 @@ export default function OtherUserDetails({ filename }) {
               fontSize: "20px",
             }}
           >
-            <spam>Residential Address Details</spam>
+            <strong>Residential Address Details</strong>
           </Typography>
           <div className="sub-divs">
             <Grid container spacing={3}>
@@ -276,6 +356,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
+                  value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                 >
                   <MenuItem value="Adilabad">Adilabad</MenuItem>
@@ -324,23 +405,14 @@ export default function OtherUserDetails({ filename }) {
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
-                  select
                   id="mandal"
                   name="mandal"
                   label="Mandal"
                   fullWidth
                   autoComplete="given-name"
                   variant="outlined"
-                  onChange={(e) => setMandal(e.target.value)}
-                >
-                  <MenuItem value="Kalher">Kalher</MenuItem>
-                  <MenuItem value="Kangti">Kangti</MenuItem>
-                  <MenuItem value="Manoor">Manoor</MenuItem>
-                  <MenuItem value="Nagilgidda">Nagilgidda</MenuItem>
-                  <MenuItem value="Narayankhed">Narayankhed</MenuItem>
-                  <MenuItem value="Sirgapoor">Sirgapoor</MenuItem>
-                  <MenuItem value="Tadkal">Tadkal</MenuItem>
-                </TextField>
+                  onChange={handleResidentialMandal}
+                ></TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -351,7 +423,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setVillage(e.target.value)}
+                  onChange={handleVillage}
                 />
               </Grid>
 
@@ -375,7 +447,7 @@ export default function OtherUserDetails({ filename }) {
                   fullWidth
                   autoComplete="family-name"
                   variant="outlined"
-                  onChange={(e) => setPostalCode(e.target.value)}
+                  onChange={handlePinCode}
                 />
               </Grid>
             </Grid>
@@ -411,7 +483,7 @@ export default function OtherUserDetails({ filename }) {
               fontSize: "2rem",
             }}
           >
-            <spam>APPLICATION</spam>
+            <strong>APPLICATION</strong>
           </Typography>
           <div style={{ display: "flex", flex: 1, margin: "20px" }}>
             <div style={{ flex: 1, margin: "20px" }}>

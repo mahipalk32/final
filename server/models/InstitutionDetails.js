@@ -6,7 +6,7 @@ const InstitutionDetailsSchema = new mongoose.Schema({
     mandalInstitution: String,
     institutionname: String,
     coursename: String,
-    admissionnumber: Number,
+    admissionnumber: String,
     addressInstitution: String,
 })
 

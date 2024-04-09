@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const UserPersonalDetails = new mongoose.Schema({
     name: String,
-    dob: Date,
+    dob: String,
     gender: String,
     age: Number,
     aadhar: Number,

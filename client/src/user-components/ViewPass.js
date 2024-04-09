@@ -20,24 +20,18 @@ function ViewPass() {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [profile, setProfile] = useState();
+  const [profile, setProfile] = useState(null);
   const [qr, setQr] = useState("");
+  const [appType, setAppType] = useState("");
 
   // Pass Details
 
   const [name, setName] = useState("");
   const [fromPlace, setFromPlace] = useState("");
   const [toPlace, setToPlace] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [futureDate, setFutureDate] = useState(null);
 
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
-  const formatDate = (date) => {
-    const options = { month: "long", day: "numeric", year: "numeric" };
-    return date.toLocaleDateString(undefined, options);
-  };
 
   const handleView = () => {
     axios
@@ -50,6 +44,7 @@ function ViewPass() {
         setToPlace(res.data.toplace);
         setStartDate(res.data.startDate);
         setEndDate(res.data.endDate);
+        setAppType(res.data.applicationType);
       })
       .catch((err) => {});
 
@@ -57,16 +52,31 @@ function ViewPass() {
       .get(`http://localhost:8080/getImage/${viewMail}`)
       .then((res) => setProfile(res.data.imageurl))
       .catch((err) => {});
-
-    axios
-      .get(`http://localhost:8080/getName/${viewMail}`)
-      .then((res) => {
-        setNameDetails(res.data);
-
-        setName(res.data.name);
-      })
-      .catch((err) => {});
   };
+
+  useEffect(() => {
+    if (appType === "student") {
+      axios
+        .get(`http://localhost:8080/getName/${viewMail}`)
+        .then((res) => {
+          setNameDetails(res.data);
+
+          setName(res.data.name);
+        })
+        .catch((err) => {});
+    }
+
+    if (appType === "other") {
+      axios
+        .get(`http://localhost:8080/getNameOther/${viewMail}`)
+        .then((res) => {
+          setNameDetails(res.data);
+
+          setName(res.data.name);
+        })
+        .catch((err) => {});
+    }
+  }, [appType]);
 
   useEffect(() => {
     if (status === "pending") {
