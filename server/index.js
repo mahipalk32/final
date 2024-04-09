@@ -22,10 +22,10 @@ app.use(express.static(staticPath));
 app.use(cors());
 const PORT = 8080;
 
-// const DB =
-//   "mongodb+srv://mahipalkeluth143:uK0niUwwZG9FOCHp@majordb.cb49png.mongodb.net/bussPass?retryWrites=true&w=majority";
+const DB =
+  "mongodb+srv://mahipalkeluth143:uK0niUwwZG9FOCHp@majordb.cb49png.mongodb.net/bussPass?retryWrites=true&w=majority";
 
-const DB = "mongodb://0.0.0.0:27017";
+// const DB = "mongodb://0.0.0.0:27017";
 
 mongoose.connect(DB, {
   useNewUrlParser: true,
